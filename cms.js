@@ -2,10 +2,41 @@
 // Handles all CMS functionality
 
 // Initialize Firebase for CMS
-let db;
-if (typeof firebase !== 'undefined') {
-  firebase.initializeApp(window.firebaseConfig);
-  db = firebase.firestore();
+// Blog CMS JavaScript
+// Handles all CMS functionality
+
+// 1. Initialize Firebase for Authentication ONLY
+let db; 
+const auth = firebase.auth(); // Use the compat version you added to index.html
+
+// 2. Auth State Observer - LOCK THE CMS
+auth.onAuthStateChanged((user) => {
+  const overlay = document.getElementById('login-overlay');
+  if (user) {
+    if (overlay) overlay.style.display = 'none';
+    loadPosts(); // Only load posts once logged in
+  } else {
+    if (overlay) overlay.style.display = 'flex';
+  }
+});
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+  
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (error) {
+    if (errorEl) {
+      errorEl.textContent = "Invalid login credentials";
+      errorEl.style.display = 'block';
+    }
+  }
+}
+
+function handleLogout() {
+  auth.signOut();
 }
 
 // Global state
@@ -23,7 +54,6 @@ const categoryLabels = {
 
 // Initialize CMS
 document.addEventListener('DOMContentLoaded', function() {
-  loadPosts();
   setupMetaCharCount();
   setDefaultDate();
   setupFeaturedImagePreview();
@@ -650,35 +680,61 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Firestore API wrapper functions
+// Firestore API wrapper functions - Linked to Netlify Functions
 const FirestoreAPI = {
   async getAll() {
-    const snapshot = await db.collection('blog_posts').orderBy('publish_date', 'desc').get();
-    const data = [];
-    snapshot.forEach(doc => {
-      data.push({ id: doc.id, ...doc.data() });
-    });
-    return { data };
+    const response = await fetch('/api/get-posts'); 
+    const data = await response.json();
+    return { data: data };
   },
   
   async getOne(id) {
-    const doc = await db.collection('blog_posts').doc(id).get();
-    if (!doc.exists) throw new Error('Not found');
-    return { id: doc.id, ...doc.data() };
+    // Find the post in the local posts array we loaded earlier
+    const post = posts.find(p => p.id === id);
+    if (!post) throw new Error('Post not found');
+    return post;
   },
-  
-  async create(data) {
-    const docRef = await db.collection('blog_posts').add(data);
-    return { id: docRef.id, ...data };
+
+  async create(postData) {
+    const response = await fetch('/api/save-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData)
+    });
+    if (!response.ok) throw new Error('Failed to create post');
+    return await response.json();
   },
-  
-  async update(id, data) {
-    await db.collection('blog_posts').doc(id).update(data);
-    return { id, ...data };
+
+  async update(id, postData) {
+    const response = await fetch('/api/save-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...postData })
+    });
+    if (!response.ok) throw new Error('Failed to update post');
+    return await response.json();
   },
-  
+
   async delete(id) {
-    await db.collection('blog_posts').doc(id).delete();
-    return { success: true };
+    const response = await fetch('/api/delete-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (!response.ok) throw new Error('Failed to delete post');
+    return await response.json();
   }
 };
+
+// HELPER FUNCTIONS (Keep these below the API block)
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
