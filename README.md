@@ -191,13 +191,5 @@ Since this is a static site, images must be hosted externally. Recommended optio
 - [ ] Post revision history
 - [ ] Bulk operations
 
-## 📞 Support
 
-For questions or issues:
-- Email: draftacv@gmail.com
-- WhatsApp: (+62) 8112087181
-- Instagram: @draftacv
-
----
-
-Built with ❤️ for DraftaCV - Handcrafted Resumes That Guard Your Future
+--
