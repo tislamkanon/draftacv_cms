@@ -680,23 +680,23 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Firestore API wrapper functions - Linked to Netlify Functions
-const FirestoreAPI = {
+// Replace the entire FirestoreAPI block with this corrected blogApi block:
+const blogApi = {
   async getAll() {
-    const response = await fetch('/api/get-posts'); 
+    const response = await fetch('https://draftacv-blog-cms.netlify.app/api/get-posts');
+    if (!response.ok) throw new Error('Failed to fetch posts');
     const data = await response.json();
     return { data: data };
   },
   
   async getOne(id) {
-    // Find the post in the local posts array we loaded earlier
     const post = posts.find(p => p.id === id);
     if (!post) throw new Error('Post not found');
     return post;
   },
 
   async create(postData) {
-    const response = await fetch('/api/save-post', {
+    const response = await fetch('https://draftacv-blog-cms.netlify.app/api/save-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(postData)
@@ -706,7 +706,7 @@ const FirestoreAPI = {
   },
 
   async update(id, postData) {
-    const response = await fetch('/api/save-post', {
+    const response = await fetch('https://draftacv-blog-cms.netlify.app/api/save-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, ...postData })
@@ -716,7 +716,7 @@ const FirestoreAPI = {
   },
 
   async delete(id) {
-    const response = await fetch('/api/delete-post', {
+    const response = await fetch('https://draftacv-blog-cms.netlify.app/api/delete-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id })
@@ -726,15 +726,5 @@ const FirestoreAPI = {
   }
 };
 
-// HELPER FUNCTIONS (Keep these below the API block)
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+// 2. NOW link the old name to the new code (put this AFTER the closing brace above)
+const FirestoreAPI = blogApi;
