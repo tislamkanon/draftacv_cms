@@ -1,8 +1,0 @@
-{
-  "name": "draftacv-cms-backend",
-  "version": "1.0.0",
-  "description": "Backend proxy for DraftaCV CMS",
-  "dependencies": {
-    "firebase-admin": "^12.0.0"
-  }
-}
